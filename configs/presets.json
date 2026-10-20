@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "presets": {
+    "Low": {
+      "quality": "Low",
+      "shadow_map_size": 1024,
+      "shadow_pcf_samples": 4,
+      "ssao_enabled": false,
+      "ssao_samples": 8,
+      "bloom_enabled": false,
+      "motion_blur_enabled": false,
+      "exposure": 1.0,
+      "contrast": 1.0,
+      "saturation": 1.0,
+      "film_grain": 0.0,
+      "chromatic_aberration": 0.0
+    },
+    "Medium": {
+      "quality": "Medium",
+      "shadow_map_size": 2048,
+      "shadow_pcf_samples": 9,
+      "ssao_enabled": true,
+      "ssao_samples": 8,
+      "bloom_enabled": true,
+      "motion_blur_enabled": false,
+      "exposure": 1.0,
+      "contrast": 1.02,
+      "saturation": 1.0,
+      "film_grain": 0.005,
+      "chromatic_aberration": 0.0
+    },
+    "High": {
+      "quality": "High",
+      "shadow_map_size": 4096,
+      "shadow_pcf_samples": 16,
+      "ssao_enabled": true,
+      "ssao_samples": 16,
+      "bloom_enabled": true,
+      "motion_blur_enabled": true,
+      "exposure": 1.0,
+      "contrast": 1.04,
+      "saturation": 1.02,
+      "film_grain": 0.008,
+      "chromatic_aberration": 0.0005
+    },
+    "Ultra": {
+      "quality": "Ultra",
+      "shadow_map_size": 8192,
+      "shadow_pcf_samples": 25,
+      "ssao_enabled": true,
+      "ssao_samples": 16,
+      "bloom_enabled": true,
+      "motion_blur_enabled": true,
+      "exposure": 1.0,
+      "contrast": 1.05,
+      "saturation": 1.03,
+      "film_grain": 0.01,
+      "chromatic_aberration": 0.001
+    }
+  }
+}
