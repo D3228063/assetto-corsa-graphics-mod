@@ -1,3 +1,4 @@
+import configparser
 import json
 import struct
 import tempfile
@@ -7,7 +8,7 @@ import zlib
 
 from scripts.optimize_texture import make_chunk, optimize_png
 from scripts.validate import validate_presets, validate_scenarios, validate_shaders
-from scripts.setup import stage
+from scripts.setup import install, stage
 
 
 class PresetValidationTests(unittest.TestCase):
@@ -47,6 +48,35 @@ class SetupTests(unittest.TestCase):
             bundle = stage(directory)
             self.assertTrue((bundle / "shaders" / "pbr.frag").is_file())
             self.assertTrue((bundle / "configs" / "presets.json").is_file())
+            self.assertTrue((bundle / "content-manager" / "assetto-corsa-graphics-mod.ini").is_file())
+
+    def test_content_manager_filter_has_supported_sections(self):
+        config = configparser.ConfigParser()
+        config.read(Path(__file__).parents[1] / "content-manager" / "assetto-corsa-graphics-mod.ini")
+        self.assertTrue(config.getboolean("YEBIS", "ENABLED"))
+        self.assertTrue(config.getboolean("AUTO_EXPOSURE", "ENABLED"))
+        self.assertAlmostEqual(config.getfloat("COLOR", "CONTRAST"), 1.04)
+
+    def test_installs_post_processing_filter_to_game_root(self):
+        with tempfile.TemporaryDirectory() as directory:
+            game_root = Path(directory)
+            (game_root / "acs.exe").touch()
+            installed = install(game_root)
+            self.assertEqual(installed, game_root / "system" / "cfg" / "ppfilters" / "assetto-corsa-graphics-mod.ini")
+            self.assertTrue(installed.is_file())
+
+    def test_requires_game_root_marker_and_protects_existing_filter(self):
+        with tempfile.TemporaryDirectory() as directory:
+            game_root = Path(directory)
+            with self.assertRaisesRegex(ValueError, "game root"):
+                install(game_root)
+            (game_root / "acs.exe").touch()
+            destination = game_root / "system" / "cfg" / "ppfilters" / "assetto-corsa-graphics-mod.ini"
+            destination.parent.mkdir(parents=True)
+            destination.write_text("user version")
+            with self.assertRaises(FileExistsError):
+                install(game_root)
+            self.assertEqual(destination.read_text(), "user version")
 
 
 class TextureOptimizationTests(unittest.TestCase):

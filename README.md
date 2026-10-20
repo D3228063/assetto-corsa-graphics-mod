@@ -1,26 +1,27 @@
-# Assetto Corsa Graphics Mod — shader foundation
+# Assetto Corsa Graphics Mod
 
-A configurable graphics-mod reference implementation featuring a metallic-roughness PBR material shader, shadow-map PCF, SSAO, an atmospheric sky, and a post-processing composite. It also includes quality presets and small Python utilities for validation, profiling, and staging the files.
+A Content Manager-selectable post-processing filter for Assetto Corsa, alongside a configurable shader foundation featuring metallic-roughness PBR, shadow-map PCF, SSAO, an atmospheric sky, and a post-processing composite. It also includes quality and lighting presets plus utilities for validation, profiling, texture optimization, and installation.
 
-> **Runtime compatibility:** Assetto Corsa does not load GLSL ES shaders directly. These shaders target GLSL ES 3.00 and need a compatible renderer/adapter (for example, a custom integration) to supply the documented inputs and render passes. This project does not patch the game, install a CSP extension, or claim that copying these files into the game makes them active. Treat this as a working shader/tooling foundation, not a drop-in replacement for an established AC renderer.
+> **What works in-game:** `content-manager/assetto-corsa-graphics-mod.ini` is an AC post-processing filter that Content Manager can select. It uses the game's YEBIS post-processing options for exposure, color grading, glare/bloom, chromatic aberration, and vignette. The GLSL ES shaders in `shaders/` are separate reference sources: AC/CSP does not load them directly, so the PBR, SSAO, and custom shader composite are not activated by installing the filter.
 
 ## Project layout
 
 - `shaders/` — standalone GLSL ES 3.00 shader stages and effects.
 - `configs/` — Low, Medium, High, and Ultra quality presets plus sunrise, midday, golden-hour, and night lighting examples.
+- `content-manager/` — Content Manager-compatible AC post-processing filter.
 - `scripts/validate.py` — validates presets and performs shader source checks; uses `glslangValidator` when installed.
 - `scripts/benchmark.py` — times repeated CPU-side validation runs (not GPU frame-time measurement).
 - `scripts/optimize_texture.py` — losslessly recompresses PNGs while retaining their metadata and color profiles.
-- `scripts/setup.py` — stages shaders and presets into a destination directory without modifying game files.
+- `scripts/setup.py` — stages a source bundle or installs the filter into an Assetto Corsa game root.
 - `tests/` — dependency-free unit tests.
 
 ## Requirements
 
 - Python 3.9 or later for the utilities and tests.
-- An OpenGL ES 3.0-capable shader runtime for the GLSL ES shader sources.
+- An OpenGL ES 3.0-capable shader runtime is required only to use the standalone GLSL ES sources.
 - Optional: `glslangValidator` on `PATH` for compiler-backed shader validation.
 
-Assetto Corsa's renderer and modding interfaces are not GLSL ES 3.0 interfaces. Before using these shaders in-game, a runtime adapter must translate or load the shader code, create the framebuffers/textures, bind uniforms, and invoke the passes in the order below. The exact adapter depends on the user's AC/CSP setup.
+The installed filter does not require a custom shader runtime. The standalone GLSL ES shaders target a different interface from Assetto Corsa and CSP; using them in-game requires porting them to the target renderer and providing its framebuffers, textures, uniforms, and pass scheduling.
 
 ## Validate and test
 
@@ -64,16 +65,26 @@ This reports validation throughput only; it does not represent game or shader GP
 
 All color textures passed to the lighting and post-processing stages should use a consistent linear color-space convention. The adapter is responsible for depth conventions, framebuffer formats, texture filtering, exposure values, and any required color-space conversions.
 
-## Staging files
+## Install and select in Content Manager
 
-To prepare a portable bundle in a chosen directory (it creates/updates a `assetto-corsa-graphics-mod` subfolder):
+Install the filter directly into the game's post-processing filters directory:
+
+```sh
+python3 scripts/setup.py --game-root "/path/to/assettocorsa"
+```
+
+The installer checks for `acs.exe` or `acs_x86.exe`, then copies the filter to `system/cfg/ppfilters/assetto-corsa-graphics-mod.ini`. It refuses to overwrite an existing copy unless `--force` is specified.
+
+In Content Manager, enable post-processing and choose **assetto-corsa-graphics-mod** from Assetto Corsa's post-processing filter list. Restart the session if Content Manager does not refresh the filter list. To remove the mod, delete that single `.ini` file from `system/cfg/ppfilters`.
+
+To stage a portable source bundle instead, run:
 
 ```sh
 python3 scripts/setup.py --destination /path/to/mods
 ```
 
-This stages source assets only. It does not modify an Assetto Corsa installation. Back up game/mod files and follow the chosen adapter's own installation instructions before integrating anything.
+This creates or updates an `assetto-corsa-graphics-mod` subfolder and does not modify the game installation.
 
 ## Limitations and next steps
 
-The included shaders are modular building blocks, not a complete renderer. Real-time adjustment UI, GPU profiling, bloom generation, motion-vector generation, refraction, texture baking, DDS optimization, and a game-specific installer require a host runtime and are not implemented here. The included CPU benchmark is intentionally labeled to avoid implying GPU profiling. Test any adapter changes against its own shader compiler and a backed-up game installation.
+The Content Manager filter uses the built-in YEBIS effects; it does not load the GLSL ES sources. Those shaders remain renderer-independent examples and are not yet ported to CSP's native shader format. The toolkit also does not implement a live adjustment UI, GPU profiling, bloom generation, motion-vector generation, refraction, texture baking, or DDS optimization. The included CPU benchmark is intentionally labeled to avoid implying GPU profiling. Test any shader port against its target compiler and a backed-up game installation.
